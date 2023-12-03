@@ -1,6 +1,6 @@
 print('2023 - Day 3')
 
-with open('./2023/Day3/input.ex') as file:
+with open('./2023/Day3/input.txt') as file:
     lines = [line.rstrip() for line in file]
 
 
@@ -9,7 +9,7 @@ with open('./2023/Day3/input.ex') as file:
 numbers=[]
 
 for i,line in enumerate(lines):
-    if i==10:
+    if i==39:
         pass
     stripped=''
     for c in line:
@@ -19,29 +19,20 @@ for i,line in enumerate(lines):
             stripped+='.'
     numbers.append([n for n in stripped.split('.') if n!=''])
 
-# print(numbers[10])
-
-for i,num in enumerate(numbers):
-    for n in num:
-        if not n.isnumeric():
-            print('faaail',n,num)
-
-
-# assert False
-
-
 partnumbers = []
 # print(numbers)
 for i,line in enumerate(lines):
-    print(i,line)
-    print(numbers[i])
-    if i==4:
+    # print(i,line)
+    # print(numbers[i])
+    s0 = 0
+    if i==39:
         pass
     for number in numbers[i]:
         # print(number)
-        start = line.find(number)
+        start = line.find(number,s0)
         neighbours = []
         end = start+len(number)-1
+        s0=end+1
         if end>=len(line)-1:
             end-=1
         else:
@@ -62,13 +53,23 @@ for i,line in enumerate(lines):
                 part=True
         if part:
             partnumbers.append(int(number))
-
-        #(''.join(neighbours))
-print(partnumbers)
-print(sum(partnumbers))   
+            if i==39:
+                print('Part number at line',i+1)
+                if i>0:
+                    print(lines[i-1][start-1:end+2])
+                print(line[start-1:end+2])
+                if i<len(line)-1:
+                    print(lines[i+1][start-1:end+2])
+        else:
+            print('Non part at line',i+1)
+            if i>0:
+                print(lines[i-1][start-1:end+2])
+            print(line[start-1:end+2])
+            if i<len(line)-1:
+                print(lines[i+1][start-1:end+2])
 
 print('------------------------')
-print('Part 1:',0)
+print('Part 1:',sum(partnumbers))
 print('------------------------')
 print('Part 2:',0)
 print('------------------------')

@@ -41,7 +41,7 @@ if (($1<=$YEAR )) && (($2<=$DAY)); then
      echo "input file exists, delete to re-download"
     else
      echo "input file does not exist, fetching to $folder/input.txt"
-     curl https://adventofcode.com/$1/day/$2/input --cookie "session=$AOC_COOKIE" -A 'psundstrom from github' --output $folder/input.txt
+     curl https://adventofcode.com/$1/day/$2/input --cookie "session=$AOC_COOKIE" -A 'psundstrom from https://github.com/psundstrom/advent-of-code' --output $folder/input.txt
     fi
 else
     echo "Input not available yet, hold your horses"

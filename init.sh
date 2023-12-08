@@ -2,7 +2,7 @@
 
 # Check current year + day to make sure we don't prematurely fetch data
 YEAR=`date -d "5 hours ago" +"%Y"`
-DAY=`date -d "5 hours ago" +"%d"`
+DAY=`date -d "5 hours ago" +"%-d"`
 
 echo "Currently year $YEAR day $DAY"
 

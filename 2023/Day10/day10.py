@@ -6,13 +6,8 @@ with open('./2023/Day10/input.txt') as file:
 for i,line in enumerate(lines):
     if 'S' in line:
         start=(i,line.find('S'))
-    print(line)
 
-print('Start at ({},{})'.format(start[0],start[1]),lines[start[0]][start[1]])
-
-startx=start[0]
-starty=start[1]
-
+# Direction changes from pipe
 pipes={
     '|': {(1,0):(1,0), (-1,0):(-1,0)},
     '-': {(0,1):(0,1), (0,-1):(0,-1)},
@@ -23,11 +18,18 @@ pipes={
     '.': {},
 }
 
+# Find points on right side of path
 right={
     (1,0):(0,-1),
     (-1,0):(0,1),
     (0,1):(1,0),
     (0,-1):(-1,0),
+    '|': {(1,0):(0,-1), (-1,0):(0,1)},
+    '-': {(0,1):(1,0), (0,-1):(-1,0)},
+    'L': {(1,0):(0,-1), (0,1):(1,0)},
+    'J': {(-1,0):(0,1), (0,1):(1,0)},
+    '7': {(-1,0):(0,1), (0,-1):(-1,0)},
+    'F': {(1,0):(0,-1), (0,-1):(-1,0)},
 }
 
 def printposition(x,y):
@@ -44,7 +46,23 @@ def printall(lines,tiles,enclosed):
             g+='O' if (x,y) in enclosed else lines[x][y] if (x,y) in tiles else '.'
         print(g)
 
-printposition(*start)
+def findenclosed(x0,y0,tiles):
+    if (x0,y0) in tiles:
+        return set([])
+    Q=[(x0,y0)]
+    contained=set()
+    while len(Q)>0:
+        x,y=Q.pop()
+        if x<0 or x>len(lines) or y<0 or y>len(lines[0]):
+            return set([]) # Nothing enclosed if we reach the outside edge
+        elif (x,y) not in tiles:
+            contained.add((x,y))
+        for xx,yy in [(1,0),(-1,0),(0,1),(0,-1)]:
+                if (x+xx,y+yy) not in tiles and (x+xx,y+yy) not in contained:
+                    Q.append((x+xx,y+yy))
+    return contained
+
+# Find possible starting directions
 dir = []
 for pipe in pipes.values():
     for xx,yy in [(1,0),(-1,0),(0,1),(0,-1)]:
@@ -52,116 +70,78 @@ for pipe in pipes.values():
             if (xx,yy) not in dir:
                 dir.append((xx,yy))
 
-print(dir)
+# Replace S with proper pipe
+for key in pipes.keys():
+    for i1,i2 in [(0,1),(1,0)]:
+        d1 = tuple([-k for k in dir[i1]])
+        d2 = tuple([k for k in dir[i2]])
+        if (d1 in pipes[key].keys() and pipes[key][d1]==d2):
+            lines[start[0]]=lines[start[0]].replace('S',key)
 
+# Loop through in both directions and store shortest path to each point
 dist={}
 dist[start]=0
-d=0
-ch=[]
 for dx,dy in dir:
-    R=dx!=0
     x=start[0]
     y=start[1]
     d=0
     while True:
-        if R:
-            dx_,dy_ = right[(dx,dy)]
-            ch.append((x+dx_,y+dy_))
         x=x+dx
         y=y+dy
         d+=1
-        if lines[x][y]=='S':
+        if (x,y)==start:
             break
         if (x,y) in dist.keys():
             dist[(x,y)] = min(dist[(x,y)],d)
         else:
             dist[(x,y)]=d
-        if lines[x][y]=='.':
-            print('Fail')
-            break
-        if x<0 or x>=len(lines):
-            print('Out of bounds x',x)
-            break
         dx,dy = pipes[lines[x][y]][(dx,dy)]
-        if R:
-            dx_,dy_ = right[(dx,dy)]
-            ch.append((x+dx_,y+dy_))
 
-print(len(dist.keys()))
-
-def findenclosed(x0,y0,tiles):
-    if (x0,y0) in tiles:
-        return set([])
-    # print(x0,y0)
-    Q=[(x0,y0)]
-    contained=set()
-    while len(Q)>0:
-        x,y=Q.pop()
-        # print(x,y)
-        if x<0 or x>len(lines) or y<0 or y>len(lines[0]):
-            # print('BLA----',len(contained))
-            pass
-            # return set([]) # Nothing enclosed if we reach the outside edge
-        elif (x,y) not in tiles:
-            # print('enclosed tile')
-            contained.add((x,y))
-            # print(contained)
-        for xx,yy in [(1,0),(-1,0),(0,1),(0,-1)]:
-                if (x+xx,y+yy) not in tiles and (x+xx,y+yy) not in contained:
-                    Q.append((x+xx,y+yy))
-    # if len(contained)==1:
-    #     for item in contained:
-    #         printposition(*item)
-    # print('HALLOOO',len(contained))
-    return contained
-
+# Store path points
 tiles=[k for k in dist.keys()]
-# print(ch)
-# print(len(ch))
 
-# print(len([lines[x][y] for x,y in dist.keys() if lines[x][y] in ['-','|']]))
+# Start at center left and move right until path is found, start from there
+x0=len(lines)//2
+y0=0
+while (x0,y0) not in tiles:
+    y0+=1
+x=x0
+y=y0
+if lines[x][y]=='L':
+    dx=-1
+    dy=0
+elif lines[x][y]=='F':
+    dx=0
+    dy=1
+elif lines[x][y]=='|':
+    dx=-1
+    dy=0
+else:
+    assert False
 
-dx,dy=dir[0]
-x=start[0]
-y=start[1]
-ch=[]
+# Go through path and store points on inside/right side of path
+ch=set()
 while True:
-    dx_,dy_ = right[(dx,dy)]
-    ch.append((x+dx_,y+dy_))
     x=x+dx
     y=y+dy
-    if lines[x][y]=='S':
-        break
-    dx,dy = pipes[lines[x][y]][(dx,dy)]
+    # Right side based on current direction
     dx_,dy_ = right[(dx,dy)]
-    ch.append((x+dx_,y+dy_))
+    ch.add((x+dx_,y+dy_))
+    dx,dy = pipes[lines[x][y]][(dx,dy)]
+    # Right side based on pipe shape
+    if (dx,dy) in right[lines[x][y]].keys():
+        dx_,dy_ = right[lines[x][y]][(dx,dy)]
+        ch.add((x+dx_,y+dy_))
+    if (x,y)==(x0,y0):
+        break
 
-# assert(False)
 enclosed=set()
 for x,y in ch:
-    if (x,y) not in enclosed:
+    if (x,y) not in enclosed and (x,y) not in tiles:
         enclosed.update(findenclosed(x,y,tiles))
-
-# enclosed=set()
-# for x,line in enumerate(lines):
-#     inside=False
-#     for y,c in enumerate(line):
-#         if (x,y) in tiles and c in ['S','|','L','F','J','7']:
-#             inside=not inside
-#         if inside and (x,y) not in tiles:
-#             enclosed.add((x,y))
-
-# printall(lines,[],[])
-# print('-')
-printall(lines,tiles,enclosed)
-# print('-')
-# printall(lines,tiles,ch)
-# print('-')
-# # print(enclosed)
-print(len(enclosed))
 
 print('------------------------')
 print('Part 1:',max(dist.values()))
 print('------------------------')
-print('Part 2:',0)
+print('Part 2:',len(enclosed))
 print('------------------------')

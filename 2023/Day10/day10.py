@@ -5,20 +5,13 @@ with open('./2023/Day10/input.txt') as file:
 
 for i,line in enumerate(lines):
     if 'S' in line:
-        start=[i,line.find('S')]
+        start=(i,line.find('S'))
     print(line)
 
 print('Start at ({},{})'.format(start[0],start[1]),lines[start[0]][start[1]])
 
 startx=start[0]
 starty=start[1]
-
-# | is a vertical pipe connecting north and south.
-# - is a horizontal pipe connecting east and west.
-# L is a 90-degree bend connecting north and east.
-# J is a 90-degree bend connecting north and west.
-# 7 is a 90-degree bend connecting south and west.
-# F is a 90-degree bend connecting south and east.
 
 pipes={
     '|': {(1,0):(1,0), (-1,0):(-1,0)},
@@ -48,28 +41,28 @@ def printall(lines,tiles,enclosed):
     for x in range(len(lines)):
         g = ''
         for y in range(len(lines[0])):
-            g+='O' if (x,y) in enclosed else 'x' if (x,y) in tiles else lines[x][y]
+            g+='O' if (x,y) in enclosed else lines[x][y] if (x,y) in tiles else '.'
         print(g)
 
-printposition(startx,starty)
+printposition(*start)
+dir = []
+for pipe in pipes.values():
+    for xx,yy in [(1,0),(-1,0),(0,1),(0,-1)]:
+        if (xx,yy) in pipes[lines[start[0]+xx][start[1]+yy]].keys():
+            if (xx,yy) not in dir:
+                dir.append((xx,yy))
 
-x=start[0]
-y=start[1]
-dx=0
-dy=1
+print(dir)
+
 dist={}
-visited=[(x,y)]
-dist[(x,y)]=0
-print('At',x,y)
+dist[start]=0
 d=0
 ch=[]
-for dx,dy in [(0,1),(-1,0)]:
-# for dx,dy in [(0,-1),(1,0)]:
-    R=dx==0
+for dx,dy in dir:
+    R=dx!=0
     x=start[0]
     y=start[1]
     d=0
-    enclosed=set()
     while True:
         if R:
             dx_,dy_ = right[(dx,dy)]
@@ -86,11 +79,13 @@ for dx,dy in [(0,1),(-1,0)]:
         if lines[x][y]=='.':
             print('Fail')
             break
-        visited.append((x,y))
         if x<0 or x>=len(lines):
             print('Out of bounds x',x)
             break
         dx,dy = pipes[lines[x][y]][(dx,dy)]
+        if R:
+            dx_,dy_ = right[(dx,dy)]
+            ch.append((x+dx_,y+dy_))
 
 print(len(dist.keys()))
 
@@ -105,7 +100,8 @@ def findenclosed(x0,y0,tiles):
         # print(x,y)
         if x<0 or x>len(lines) or y<0 or y>len(lines[0]):
             # print('BLA----',len(contained))
-            return set([]) # Nothing enclosed if we reach the outside edge
+            pass
+            # return set([]) # Nothing enclosed if we reach the outside edge
         elif (x,y) not in tiles:
             # print('enclosed tile')
             contained.add((x,y))
@@ -121,25 +117,47 @@ def findenclosed(x0,y0,tiles):
 
 tiles=[k for k in dist.keys()]
 # print(ch)
-print(len(ch))
+# print(len(ch))
 
-print(len([lines[x][y] for x,y in dist.keys() if lines[x][y] in ['-','|']]))
+# print(len([lines[x][y] for x,y in dist.keys() if lines[x][y] in ['-','|']]))
+
+dx,dy=dir[0]
+x=start[0]
+y=start[1]
+ch=[]
+while True:
+    dx_,dy_ = right[(dx,dy)]
+    ch.append((x+dx_,y+dy_))
+    x=x+dx
+    y=y+dy
+    if lines[x][y]=='S':
+        break
+    dx,dy = pipes[lines[x][y]][(dx,dy)]
+    dx_,dy_ = right[(dx,dy)]
+    ch.append((x+dx_,y+dy_))
 
 # assert(False)
 enclosed=set()
 for x,y in ch:
     if (x,y) not in enclosed:
-        # print('check',x,y)
         enclosed.update(findenclosed(x,y,tiles))
 
+# enclosed=set()
+# for x,line in enumerate(lines):
+#     inside=False
+#     for y,c in enumerate(line):
+#         if (x,y) in tiles and c in ['S','|','L','F','J','7']:
+#             inside=not inside
+#         if inside and (x,y) not in tiles:
+#             enclosed.add((x,y))
 
-printall(lines,[],[])
-print('-')
+# printall(lines,[],[])
+# print('-')
 printall(lines,tiles,enclosed)
-print('-')
-printall(lines,tiles,ch)
-print('-')
-# print(enclosed)
+# print('-')
+# printall(lines,tiles,ch)
+# print('-')
+# # print(enclosed)
 print(len(enclosed))
 
 print('------------------------')

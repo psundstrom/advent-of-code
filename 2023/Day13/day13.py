@@ -1,6 +1,6 @@
 print('2023 - Day 13')
 
-with open('./2023/Day13/input.txt') as file:
+with open('./2023/Day13/input.ex') as file:
     lines = [line.rstrip() for line in file]
 
 patterns=[]
@@ -60,14 +60,21 @@ def print_horizontal(p,n):
             print('-'*len(l))
         print(l)
 
+def flip(p,x,y):
+    if p[x][y]=='#':
+        p[x] = p[x][:y]+'.'+p[x][y+1:]
+    else:
+        p[x] = p[x][:y]+'#'+p[x][y+1:]
+    return p
+
 ans=0
 
-nc = 0
+nc=0
+nn=0
 for ip,p in enumerate(patterns):
-    print(ip)
-
-    for l in p:
-        print(l)
+    nx=len(p)
+    ny=len(p[0])
+    nn+=nx*ny
 
     nv=find_vertical(p)
     nh=find_horizontal(p)
@@ -86,5 +93,45 @@ for ip,p in enumerate(patterns):
 print('------------------------')
 print('Part 1:',ans)
 print('------------------------')
-print('Part 2:',0)
+
+ans=0
+for ip,p in enumerate(patterns):
+    for l in p:
+        print(l)
+
+    nv=find_vertical(p)
+    nh=find_horizontal(p)
+
+    br=False
+    for x in range(len(p)):
+        for y in range(len(p[0])):
+            p_ = flip(p,x,y)
+            nv_=find_vertical(p_)
+            nh_=find_horizontal(p_)
+
+            if nv_!=nv or nh_!=nh:
+                br=True
+                print('br',nv_,nh_,x,y)
+                if nv_!=nv:
+                    nv=nv_
+                    nh=-1
+                elif nh_!=nh:
+                    nh=nh_
+                    nv=-1
+                break
+        if br:
+            break
+
+    if nv>-1:
+        print('v:',nv)
+        print_vertical(p_,nv)
+        nc+=1
+        ans+=nv
+    elif nh>-1:
+        print('h:',nh)
+        print_horizontal(p,nh_)
+        nc+=1
+        ans+=100*nh
+
+print('Part 2:',ans)
 print('------------------------')

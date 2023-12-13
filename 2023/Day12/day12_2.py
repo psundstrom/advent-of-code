@@ -1,4 +1,5 @@
 print('2023 - Day 12')
+import functools
 
 with open('./2023/Day12/input.txt') as file:
     lines = [line.rstrip() for line in file]
@@ -8,84 +9,63 @@ A=[]
 for line in lines:
     springs,arr = line.split()
     S.append(springs)
-    A.append([int(n) for n in arr.split(',')])
+    A.append(tuple([int(n) for n in arr.split(',')]))
 
-def getlocked(springs,n,istart):
-    locked=[]
-    for i,c in enumerate(springs):
-        if i+n<=len(springs):
-            # print(springs[max(0,i-1):min(i+n+1,len(springs))])
-            if springs[i:i+n]=='#'*n and (i+n==len(springs) or springs[i+n] in ['.','?']) and (i==0 or springs[i-1] in ['.','?']):
-                # print(springs[max(0,i-1):min(len(springs),i+n+1)],'#'*n,springs[i+n+1],springs[i+n] in ['.','?'])
-                if i>=istart:
-                    locked.append(i)
-                # print('group',i,springs[max(0,i-1):min(i+n+1,len(springs))])
-    return locked
-
-def getpossible(springs,n):
-    p = []
-    for i,c in enumerate(springs):
-        if i+n<=len(springs):
-            if all([k in ['#','?'] for k in springs[i:i+n]]) and (i==0 or springs[i-1] in ['.','?']) and (i+n==len(springs) or springs[i+n] in ['.','?']):
-                p.append(i)
-    return p
-
-def replace(springs,n,ic):
-    # Insert n*'#' starting at ic, pad with '.'
-    if ic==0:
-        ir1=0
-        s1=''
-    else:
-        ir1=ic-1
-        s1='.'
-    if ic+n==len(springs):
-        ir2=len(springs)
-        s2=''
-    else:
-        ir2=ic+n+1
-        s2='.'
-    return springs[:ir1]+s1+'#'*n+s2+springs[ir2:]
-
-def solve(springs,istart,arr):
-    # print(springs,'---')
-    a=arr.copy()
-    n=a.pop(0)
-    offset=0 if istart>0 else 0
-    IL = getlocked(springs,n,istart)
-    I = [istart+ip+offset for ip in getpossible(springs[istart+offset:],n)]
-    if len(IL)==1 and IL[0] in I:
-        # print(a,n)
-        # print(IL[0]+istart,I,istart)
-        # print('>',springs,istart+IL[0],n)
-        I=IL
-    if len(I)==0:
+@functools.cache
+def solve(springs,arr):
+    if len(arr)==0:
+        if '#' in springs:
+            return 0
+        else:
+            return 1
+        
+    if len(springs)<sum(arr)+len(arr)-1:
         return 0
-    elif len(a)==0:
-        return len(I)
+    
+    if len(springs)<arr[0]:
+        return 0
+
+    if springs[0]=='#':
+        n=pound(springs,arr)
+    elif springs[0]=='.':
+        n=dot(springs,arr)
+    elif springs[0]=='?':
+        n=pound(springs,arr)+dot(springs,arr)
     else:
-        return sum([solve(replace(springs,n,ic),ic+n,a) for ic in I])
+        assert False
+    return n
 
-# start at i=0
-# if arr is empty:
-#   return 1?
-# pop one n from arr
-# if no possible positions
-#   return 0
-# for all possible positions of n:
-# replace string with .#*#., pass remaining string recursively with the rest of n
-ans=0
-for i in range(len(S)):
-    springs=S[i]
-    arr=A[i]
-    # print(springs,arr,solve(springs,0,arr))
-    ans+=solve(springs,0,arr)
-# print('          0123')
-# print('01234567891111')
-# print(springs)
-# print(getlocked(springs,3))
+@functools.cache
+def pound(springs,arr):
+    n=arr[0]
+    subst = springs[:n]
+    subst=subst.replace('?','#')
+    if subst.count('#')!=n:
+        return 0
+    if len(subst)==len(springs):
+        return 1
+    if len(arr)==1 and springs[n:].count('#')==0:
+        return 1
+    if springs[n] in ['?','.']:
+        return solve(springs[n+1:],arr[1:])
+    return 0
+
+@functools.cache
+def dot(springs,arr):
+    return solve(springs[1:],arr)
+
+ans1=0
+for springs,arr in zip(S,A):
+    n = solve(springs,arr)
+    ans1+=n
+
+ans2=0
+for springs,arr in zip(S,A):
+    n = solve('?'.join([springs for _ in range(5)]),arr*5)
+    ans2+=n
 
 print('------------------------')
-print('Part 1:',ans)
+print('Part 1:',ans1)
 print('------------------------')
-print('Part 2:',0)
+print('Part 2:',ans2)
 print('------------------------')

@@ -1,3 +1,5 @@
+import functools
+
 print('2023 - Day 16')
 
 with open('./2023/Day16/input.txt') as file:
@@ -24,10 +26,14 @@ def printbeams(beams):
 def step(p,d):
     return p[0]+d[0],p[1]+d[1]
 
-def next(beams):
+def next(beams,visited=set()):
     addbeams=[]
     removebeams=[]
     for i,(current,d) in enumerate(beams):
+        if (current,d) in visited:
+            continue
+        else:
+            visited.add((current,d))
         if current[0]<0 or current[0]>R-1 or current[1]<0 or current[1]>C-1:
             removebeams.append(i)
             continue
@@ -73,15 +79,15 @@ def next(beams):
     for j in reversed(sorted(removebeams)):
         del beams[j]
     beams.extend(addbeams)
-    beams=list(set(beams))
-    return beams
+    return beams,visited
 
 def solve(start,d):
     energized={start}
     beams=[(start,d)]
-    upd=[-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1]
+    upd=[-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1]
+    visited=set()
     for i in range(10000):
-        beams=next(beams)
+        beams,visited=next(beams,visited)
         energized.update([p for p,_ in beams if (0<=p[0]<R and 0<=p[1]<C)])
         upd.pop(0)
         upd.append(len(energized))

@@ -10,9 +10,6 @@ for line in lines:
 R = len(M)
 C = len(M[0])
 
-start=(0,0)
-d=(0,1)
-beams=[(start,d)]
 
 def printbeams():
     bp = [(r,c) for (r,c),d in beams]
@@ -28,7 +25,7 @@ def printbeams():
 def step(p,d):
     return p[0]+d[0],p[1]+d[1]
 
-def next():
+def next(beams):
     addbeams=[]
     removebeams=[]
     for i,(current,d) in enumerate(beams):
@@ -77,8 +74,13 @@ def next():
     for j in reversed(sorted(removebeams)):
         del beams[j]
     beams.extend(addbeams)
+    beams=list(set(beams))
+    return beams
 
 energized={(0,0)}
+start=(0,0)
+d=(0,1)
+beams=[(start,d)]
 
 for (r,c),d in beams:
     print(r,c,d)
@@ -88,14 +90,14 @@ for (r,c),d in beams:
 upd=[-6,-5,-4,-3,-2,-1]
 
 for i in range(10000):
-    next()
+    beams=next(beams)
     energized.update([p for p,_ in beams if (0<=p[0]<R and 0<=p[1]<C)])
     upd.pop(0)
     upd.append(len(energized))
     if len(set(upd))==1:
         print('end',i)
         break
-    print(i,len(beams),len(energized))
+    # print(i,len(beams),len(energized))
     # printbeams()
     if len(beams)==0:
         print('end',i)
@@ -109,6 +111,10 @@ for i in range(10000):
 #         else:
 #             g+=char
 #     print(g)
+
+print(len(beams))
+print(len(set(beams)))
+
 print(upd)
 print('------------------------')
 print('Part 1:',len(energized))

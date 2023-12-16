@@ -11,7 +11,6 @@ for line in lines:
 R = len(M)
 C = len(M[0])
 
-
 def printbeams(beams):
     bp = [(r,c) for (r,c),d in beams]
     for r,row in enumerate(M):
@@ -27,19 +26,18 @@ def step(p,d):
     return p[0]+d[0],p[1]+d[1]
 
 def next(beams,visited=set()):
-    addbeams=[]
-    removebeams=[]
-    for i,(current,d) in enumerate(beams):
+    out = set()
+    while len(beams)>0:
+        (current,d)=beams.pop()
         if (current,d) in visited:
             continue
         else:
             visited.add((current,d))
         if current[0]<0 or current[0]>R-1 or current[1]<0 or current[1]>C-1:
-            removebeams.append(i)
             continue
         c = M[current[0]][current[1]]
         if c == '.':
-            beams[i] = (step(current,d),d)
+            out.add((step(current,d),d))
         elif c == '/':
             if d==(0,1):
                 d=(-1,0)
@@ -51,7 +49,7 @@ def next(beams,visited=set()):
                 d=(0,1)
             else:
                 assert False
-            beams[i] = (step(current,d),d)
+            out.add((step(current,d),d))
         elif c == '\\':
             if d==(0,1):
                 d=(1,0)
@@ -63,39 +61,29 @@ def next(beams,visited=set()):
                 d=(0,-1)
             else:
                 assert False
-            beams[i] = (step(current,d),d)
+            out.add((step(current,d),d))
         elif c == '-':
             if d[0]==0:
-                beams[i] = (step(current,d),d)
+                out.add((step(current,d),d))
             else:
-                beams[i] = (step(current,(0,-1)),(0,-1))
-                addbeams.append((step(current,(0,1)),(0,1)))
+                out.add((step(current,(0,-1)),(0,-1)))
+                out.add((step(current,(0,1)),(0,1)))
         elif c == '|':
             if d[1]==0:
-                beams[i] = (step(current,d),d)
+                out.add((step(current,d),d))
             else:
-                beams[i] = (step(current,(1,0)),(1,0))
-                addbeams.append((step(current,(-1,0)),(-1,0)))
-    for j in reversed(sorted(removebeams)):
-        del beams[j]
-    beams.extend(addbeams)
-    return beams,visited
+                out.add((step(current,(1,0)),(1,0)))
+                out.add((step(current,(-1,0)),(-1,0)))
+    return out,visited
 
 def solve(start,d):
-    energized={start}
-    beams=[(start,d)]
-    upd=[-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1]
+    beams={(start,d)}
     visited=set()
-    for i in range(10000):
+    while True:
         beams,visited=next(beams,visited)
-        energized.update([p for p,_ in beams if (0<=p[0]<R and 0<=p[1]<C)])
-        upd.pop(0)
-        upd.append(len(energized))
-        if len(set(upd))==1:
-            break
         if len(beams)==0:
             break
-    return len(energized)
+    return len(set([p for p,_ in visited if (0<=p[0]<R and 0<=p[1]<C)]))
 
 start=(0,0)
 d=(0,1)

@@ -6,12 +6,11 @@ with open('./2023/Day16/input.txt') as file:
 M=[]
 for line in lines:
     M.append(line)
-    print(line)
 R = len(M)
 C = len(M[0])
 
 
-def printbeams():
+def printbeams(beams):
     bp = [(r,c) for (r,c),d in beams]
     for r,row in enumerate(M):
         g=''
@@ -77,47 +76,45 @@ def next(beams):
     beams=list(set(beams))
     return beams
 
-energized={(0,0)}
+def solve(start,d):
+    energized={start}
+    beams=[(start,d)]
+    upd=[-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1]
+    for i in range(10000):
+        beams=next(beams)
+        energized.update([p for p,_ in beams if (0<=p[0]<R and 0<=p[1]<C)])
+        upd.pop(0)
+        upd.append(len(energized))
+        if len(set(upd))==1:
+            break
+        if len(beams)==0:
+            break
+    return len(energized)
+
 start=(0,0)
 d=(0,1)
-beams=[(start,d)]
+ans1 = solve(start,d)
 
-for (r,c),d in beams:
-    print(r,c,d)
+ans2 = 0
+for i,start in enumerate([(r,0) for r in range(R)]):
+    d=(0,1)
+    n = solve(start,d)
+    ans2=max(n,ans2) 
+for i,start in enumerate([(r,C-1) for r in range(R)]):
+    d=(0,-1)
+    n = solve(start,d)
+    ans2=max(n,ans2) 
+for i,start in enumerate([(0,c) for c in range(C)]):
+    d=(1,0)
+    n = solve(start,d)
+    ans2=max(n,ans2) 
+for i,start in enumerate([(R-1,c) for c in range(C)]):
+    d=(-1,0)
+    n = solve(start,d)
+    ans2=max(n,ans2) 
 
-# while all([(0<=p[0]<R and 0<=p[1]<C) for p,_ in beams]):
-
-upd=[-6,-5,-4,-3,-2,-1]
-
-for i in range(10000):
-    beams=next(beams)
-    energized.update([p for p,_ in beams if (0<=p[0]<R and 0<=p[1]<C)])
-    upd.pop(0)
-    upd.append(len(energized))
-    if len(set(upd))==1:
-        print('end',i)
-        break
-    # print(i,len(beams),len(energized))
-    # printbeams()
-    if len(beams)==0:
-        print('end',i)
-        break
-
-# for r,row in enumerate(M):
-#     g=''
-#     for c,char in enumerate(row):
-#         if (r,c) in energized:
-#             g+='#'
-#         else:
-#             g+=char
-#     print(g)
-
-print(len(beams))
-print(len(set(beams)))
-
-print(upd)
 print('------------------------')
-print('Part 1:',len(energized))
+print('Part 1:',ans1)
 print('------------------------')
-print('Part 2:',0)
+print('Part 2:',ans2)
 print('------------------------')

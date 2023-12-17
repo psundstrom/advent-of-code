@@ -42,6 +42,27 @@ D={
 def value(p):
     return H[p[0]][p[1]]
 
+def printmap():
+    for r,row in enumerate(M):
+        g=''
+        for c,n in enumerate(row):
+            if (r,c) in [(r,c) for (r,c,d) in SEEN]:
+                g+=green('#')
+            elif (r,c) in [(r,c) for (r,c,d) in Q]:
+                g+=yellow('o')
+            else:
+                g+=str(n)
+        print(g)
+
+# Keep track of travelled paths
+# State = current,current-1,current-2,current-3
+# Add (current,current-1,current-2,current-3) to Q
+# current is the node we are investigating
+# check previous directions to know what positions are allowed
+# add neighbours as usual, for each state in queue
+# Set tentative as usual
+
+
 while Q:
     Q.sort(key=value)
     current = Q.pop(0)

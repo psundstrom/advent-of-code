@@ -2,6 +2,14 @@ print('2023 - Day 17')
 
 from collections import deque
 
+def green(str):
+    return f"\033[92m{str}\033[00m"
+def red(str):
+    return f"\033[91m{str}\033[00m"
+def yellow(str):
+    return f"\u001b[33m{str}\033[00m"
+
+
 with open('./2023/Day17/input.ex') as file:
     M = [[int(n) for n in line.rstrip()] for line in file]
 

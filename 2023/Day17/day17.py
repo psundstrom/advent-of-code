@@ -23,13 +23,11 @@ C=len(M[0])
 Q = []
 PREV = {}
 
-# start=(0,0,(1,0))
+start=((0,0),)
 goal=(R-1,C-1)
 
-Q.append((0,0,(1,0)))
-Q.append((0,0,(0,1)))
-SEEN={(0,0)}
-
+SEEN={start}
+Q.append(start)
 H[0][0]=M[0][0]
 
 D={
@@ -40,15 +38,16 @@ D={
 }
 
 def value(p):
-    return H[p[0]][p[1]]
+    print('p:',p)
+    return H[p[0][0]][p[0][1]]
 
 def printmap():
     for r,row in enumerate(M):
         g=''
         for c,n in enumerate(row):
-            if (r,c) in [(r,c) for (r,c,d) in SEEN]:
-                g+=green('#')
-            elif (r,c) in [(r,c) for (r,c,d) in Q]:
+            if (r,c) in [c[0] for c in SEEN]:
+                g+=green(str(n))
+            elif (r,c) in [c[0] for c in Q]:
                 g+=yellow('o')
             else:
                 g+=str(n)
@@ -62,40 +61,36 @@ def printmap():
 # add neighbours as usual, for each state in queue
 # Set tentative as usual
 
-
+print(Q)
 while Q:
+    print(Q)
     Q.sort(key=value)
     current = Q.pop(0)
-    # if (current[0],current[1])==goal:
-    #     pass
-    r,c,d = current
-    s=(r,c)
-    history = [s]
-    for i in range(3):
-        if s in PREV.keys():
-            history.append(PREV[s])
-            s=PREV[s]
-    if len(history)==4:
-        rs = set([p[0] for p in history])
-        cs = set([p[1] for p in history])
-
-        if len(rs)==1:
-            nod = [(0,1),(0,-1)]
-        elif len(cs)==1:
-            nod = [(1,0),(-1,0)]
-    else:
-        nod=[]
-
-    for (rr,cc,dd) in [(r+dr,c+dc,(dr,dc)) for dr,dc in D[d] if (dr,dc) not in nod]:
-        if 0<=rr<R and 0<=cc<C and (rr,cc) not in SEEN:
+    if (current[0][0],current[0][1])==goal:
+        break
+    r,c = current[0]
+    nod=[]
+    if len(current)>1:
+        nod.append((current[1][0]-current[0][0],current[1][1]-current[0][1]))
+    if len(current)>3:
+        # Check if all four is on a row or column
+        rh = set([r for r,c in current])
+        ch = set([c for r,c in current])
+        if len(rh)==1:
+            nod.extend([(0,1),(0,-1)])
+        elif len(ch)==1:
+            nod.extend([(1,0),(-1,0)])
+    for dr,dc in [(dr,dc) for dr,dc in [(1,0),(-1,0),(0,1),(0,-1)] if (dr,dc) not in nod]:
+        rr=r+dr
+        cc=c+dc
+        if 0<=rr<R and 0<=cc<C and ((rr,cc),)+current[1:] not in SEEN:
             tentative = H[r][c]+M[rr][cc]
             if tentative<H[rr][cc]:
                 PREV[(rr,cc)]=(r,c)
                 H[rr][cc]=tentative
-                Q.append((rr,cc,dd))
-    SEEN.add((r,c))
-    # if (r,c)==goal:
-    #     break
+                Q.append(((rr,cc),)+current[:3])
+    SEEN.add(current)
+    printmap()
     if len(Q)==0:
         print('fail')
 

@@ -62,21 +62,54 @@ def applyrule(part,rule):
 
 def applyrule2(part,rule):
     # part is ranges [(low,high),(low,high),(low,high),(low,high)]
-    # return new parts with ranges with their corresponding targets
+    # range means low:high -> high is not included in range, so (low,high) means low<=x<high
+    # return set of parts with ranges with their corresponding targets
+    if len(rule)==1:
+        return part,rule[0]
+    var,op,val,target=rule
+    if op=='<':
+        low,high = part[V[var]]
+        if high<=val:
+            return part,target
+        if low>val:
+            return [],'R'
+        part[V[var]] = (low,val)
+        return part,target
+    elif op == '>':
+        low,high = part[V[var]]
+        if high<=val+1:
+            return [],'R'
+        if low>val:
+            return part,target
+        part[V[var]] = (val+1,high)
+        return part,target
+    else:
+        assert False
+    # in{
+    #     part=[(0,4000),(0,4000),(0,4000),(0,4000)]
     
-    # return list of parts and targets...?
-    
-    return 0
+    #     m>1770:pm -> m=1771-4000 goes to pm -> (1771,4001)
+    #    ,m>644:sz, -> m=645-1770 goes to sz -> (645,1771)
+    #     nc} m=0-644 goes to nc -> (0,645)
 
-def applyworkflow2(part,w):
-    # part is ranges [(low,high),(low,high),(low,high),(low,high)]
-    workflow = W[w]
-    parts=[part]
-    targets=[w]
-    for part,target in zip(parts,targets):
-        for rule in workflow:
-            parts,targets=applyrule2(part,rule)
-    return 0
+    return parts,targets
+
+def applyworkflow2(part,target):
+    # parts as ranges -> [(low,high),(low,high),(low,high),(low,high)]
+    workflow = W[target]
+    ans=0
+    for rule in workflow:
+        newpart,newtarget=applyrule2(part,rule)
+        if newtarget=='A':
+            result=1
+            for high,low in newpart:
+                result*=(high-low)
+            ans+=result
+        elif newtarget=='R':
+            ans+=0
+        else:
+            ans+=applyworkflow2(newpart,newtarget)
+    return ans
 
 def applyworkflow(part,w):
     workflow = W[w]
@@ -95,16 +128,15 @@ for part in P:
     if result=='A':
         A.append(part)
 
-# in{
-#     part=[(0,4000),(0,4000),(0,4000),(0,4000)]
-
-#     m>1770:pm -> m=1771-4000 goes to pm
-#    ,m>644:sz, -> m=645-1770 goes to sz
-#     nc} m=0-644 goes to nc
 
 #     applyworkflow([(1771,4000),(0,4000),(0,4000),(0,4000)],'pm')
 #     applyworkflow([(645,1770),(0,4000),(0,4000),(0,4000)],'sz')
 #     applyworkflow([(0,644),(0,4000),(0,4000),(0,4000)],'nc')
+
+part=[(0,4001),(0,4001),(0,4001),(0,4001)]
+
+print(applyworkflow2(part,'in'))
+# 4672272366464 is too low
 
 print('------------------------')
 print('Part 1:',sum([sum(p) for p in A]))

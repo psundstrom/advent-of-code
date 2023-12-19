@@ -1,10 +1,12 @@
 print('2023 - Day 19')
 
-with open('./2023/Day19/input.ex') as file:
+with open('./2023/Day19/input.txt') as file:
     lines = [line.rstrip() for line in file]
 
 W={}
 P=[]
+V={'x':0,'m':1,'a':2,'s':3}
+
 getparts=False
 for line in lines:
     if len(line)==0:
@@ -40,8 +42,6 @@ for line in lines:
             part[i]=int(item.split('=')[1])
         P.append(part)
 
-V={'x':0,'m':1,'a':2,'s':3}
-
 def applyrule(part,rule):
     if len(rule)==1:
         return rule[0]
@@ -72,7 +72,7 @@ def applyrule2(part,rule):
         if high<=val:
             return part,target,[]
         if low>val:
-            return [],'R',part
+            return [],'',part
         newpart[V[var]] = (low,val)
         part[V[var]] = (val,high)
         
@@ -80,7 +80,7 @@ def applyrule2(part,rule):
     elif op == '>':
         low,high = part[V[var]]
         if high<=val+1:
-            return [],'R',part
+            return [],'',part
         if low>val:
             return part,target,[]
         newpart[V[var]] = (val+1,high)
@@ -88,18 +88,9 @@ def applyrule2(part,rule):
         return newpart,target,part
     else:
         assert False
-    # in{
-    #     part=[(0,4000),(0,4000),(0,4000),(0,4000)]
-    
-    #     m>1770:pm -> m=1771-4000 goes to pm -> (1771,4001)
-    #    ,m>644:sz, -> m=645-1770 goes to sz -> (645,1771)
-    #     nc} m=0-644 goes to nc -> (0,645)
-
-    return parts,targets
 
 def applyworkflow2(part,workflow):
     # parts as ranges -> [(low,high),(low,high),(low,high),(low,high)]
-    # workflow = W[target]
     ans=0
     if len(workflow)==0:
         return 0
@@ -108,11 +99,13 @@ def applyworkflow2(part,workflow):
     newpart,newtarget,rempart=applyrule2(part,workflow[0])
     if newtarget=='A':
         result=1
-        for high,low in newpart:
+        for low,high in newpart:
             result*=(high-low)
-        return result
+        return result+applyworkflow2(rempart,workflow[1:])
     elif newtarget=='R':
-        return 0
+        return applyworkflow2(rempart,workflow[1:])
+    elif newtarget=='':
+        return applyworkflow2(rempart,workflow[1:])
     else:
         return applyworkflow2(rempart,workflow[1:])+applyworkflow2(newpart,W[newtarget])
 
@@ -126,19 +119,16 @@ def applyworkflow(part,workflow):
         else:
             return applyworkflow(part,W[next])
 
-A=[]
+ans=0
 for part in P:
     result=applyworkflow(part,W['in'])
     if result=='A':
-        A.append(part)
+        ans+=sum([p for p in part])
 
 part=[(1,4001),(1,4001),(1,4001),(1,4001)]
 
-print(applyworkflow2(part,W['in']))
-# 4672272366464 is too low
-
 print('------------------------')
-print('Part 1:',sum([sum(p) for p in A]))
+print('Part 1:',ans)
 print('------------------------')
-print('Part 2:',0)
+print('Part 2:',applyworkflow2(part,W['in']))
 print('------------------------')

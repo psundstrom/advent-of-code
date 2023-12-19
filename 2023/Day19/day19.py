@@ -80,9 +80,9 @@ def applyrule2(part,rule):
     elif op == '>':
         low,high = part[V[var]]
         if high<=val+1:
-            return [],'R'
+            return [],'R',part
         if low>val:
-            return part,target
+            return part,target,[]
         newpart[V[var]] = (val+1,high)
         part[V[var]] = (low,val+1)
         return newpart,target,part
@@ -103,6 +103,8 @@ def applyworkflow2(part,workflow):
     ans=0
     if len(workflow)==0:
         return 0
+    if len(part)==0:
+        return 0
     newpart,newtarget,rempart=applyrule2(part,workflow[0])
     if newtarget=='A':
         result=1
@@ -114,8 +116,7 @@ def applyworkflow2(part,workflow):
     else:
         return applyworkflow2(rempart,workflow[1:])+applyworkflow2(newpart,W[newtarget])
 
-def applyworkflow(part,w):
-    workflow = W[w]
+def applyworkflow(part,workflow):
     for rule in workflow:
         next=applyrule(part,rule)
         if not next:
@@ -123,11 +124,11 @@ def applyworkflow(part,w):
         if next in ['A','R']:
             return next
         else:
-            return applyworkflow(part,next)
+            return applyworkflow(part,W[next])
 
 A=[]
 for part in P:
-    result=applyworkflow(part,'in')
+    result=applyworkflow(part,W['in'])
     if result=='A':
         A.append(part)
 

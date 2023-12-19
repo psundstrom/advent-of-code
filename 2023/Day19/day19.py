@@ -14,7 +14,26 @@ for line in lines:
         line = line[:-1]
         parts = line.split('{')
         name=parts[0]
-        rules=parts[1].split(',')
+        rules=[]
+        for item in parts[1].split(','):
+            if '<' in item:
+                op='<'
+                var,rest = item.split('<')
+                val,target = rest.split(':')
+                val=int(val)
+                rules.append([var,op,val,target])
+            elif '>' in item:
+                op='>'
+                var,rest = item.split('>')
+                val,target = rest.split(':')
+                val=int(val)
+                rules.append([var,op,val,target])
+            else:
+                op=''
+                assert ':' not in item
+                target=item
+                rules.append([target])
+        print(rules)
         W[name]=rules
     else:
         part=[0]*4
@@ -25,25 +44,22 @@ for line in lines:
 V={'x':0,'m':1,'a':2,'s':3}
 
 def applyrule(part,rule):
-    if '<' in rule:
-        var,rest = rule.split('<')
-        val,target = rest.split(':')
-        val=int(val)
+    if len(rule)==1:
+        return rule[0]
+    var,op,val,target=rule
+    if op=='<':
         if part[V[var]]<val:
             return target
         else:
             return None
-    elif '>' in rule:
-        var,rest = rule.split('>')
-        val,target = rest.split(':')
-        val=int(val)
+    elif op == '>':
         if part[V[var]]>val:
             return target
         else:
             return None
     else:
-        assert ':' not in rule
-        return rule
+        assert False    
+
 
 
 def applyworkflow(part,w):

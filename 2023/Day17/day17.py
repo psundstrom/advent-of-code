@@ -38,8 +38,19 @@ D={
 }
 
 def value(p):
-    print('p:',p)
-    return H[p[0][0]][p[0][1]]
+def printq(current):
+    # c is ((),(),(),())
+    for r,row in enumerate(M):
+        g=''
+        for c,n in enumerate(row):
+            if (r,c)==current[0]:
+                g+=green(str(n))
+            elif (r,c) in current[1:]:
+                g+=yellow('o')
+            else:
+                g+=str(n)
+        print(g)
+    
 
 def printmap():
     for r,row in enumerate(M):

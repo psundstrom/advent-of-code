@@ -51,13 +51,36 @@ def flipflop(module,pulse):
 # if return is 1, pulses are sent
 
 def conjunction(module,pulse,source):
-    # Conjunction modules (prefix &) remember the type of the most recent pulse received from each of their connected input modules; they initially default to remembering a low pulse for each input. When a pulse is received, the conjunction module first updates its memory for that input. Then, if it remembers high pulses for all inputs, it sends a low pulse; otherwise, it sends a high pulse.
     assert M[module]['type']=='&'
+
+    if module=='zr':
+        pass
+    # Conjunction modules (prefix &) remember the type of the most recent pulse received from each of their connected input modules; they initially default to remembering a low pulse for each input. When a pulse is received, the conjunction module first updates its memory for that input. Then, if it remembers high pulses for all inputs, it sends a low pulse; otherwise, it sends a high pulse.
+
     M[module]['state'][M[module]['inputs'].index(source)]=pulse
     if sum(M[module]['state'])==len(M[module]['state']):
         return 0
     else:
         return 1
+
+def printstates():
+    g = ''
+    for k,m in M.items():
+        if m['type']=='&':
+            state=m['state']
+            g+=f'{k} ({sum(state)}):'
+            g+=''.join([f'{s}' for s in m['state']])
+            g+=' '
+    print(g)
+
+def getfullstate(M):
+    return ''.join([getstate(m) for m in M.values()])
+
+def getstate(m):
+    if m['type']=='&':
+        return ''.join([str(n) for n in m['state']])
+    else:
+        return m['state']
 
 # Push button, M['broadcaster']
 print(M['broadcaster']['dest'])
@@ -68,7 +91,7 @@ low=0
 high=0
 ans1=0
 SEEN=set()
-for i in range(5):
+for i in range(1000000):
     if i==1000:
         ans1=low*high
     low+=1
@@ -79,15 +102,7 @@ for i in range(5):
 
     nrx=0
     while Q:   
-        g = ''
-        for k,m in M.items():
-            # if m['type']=='%':
-            #     g+=str(m['state'])
-            if m['type']=='&':
-                g+=f'{k}: '
-                g+=''.join([f'{s}' for s in m['state']])
-                g+=' '
-        print(g)
+
         dest,pulse,source=Q.popleft()
         if dest=='zr':
             nrx+=1
@@ -104,7 +119,8 @@ for i in range(5):
             res = conjunction(dest,pulse,source)
             for t in M[dest]['dest']:
                 Q.append((t,res,dest))
-    print(nrx)
+    if i%1000==0:
+        printstates()   
     
 print('------------------------')
 print('Part 1:',ans1)

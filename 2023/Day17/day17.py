@@ -38,6 +38,9 @@ D={
 }
 
 def value(p):
+    print('p:',p)
+    return H[p[0][0]][p[0][1]]
+
 def printq(current):
     # c is ((),(),(),())
     for r,row in enumerate(M):

@@ -1,8 +1,19 @@
 print('2023 - Day 18')
 
-with open('./2023/Day18/input.txt') as file:
+def green(str):
+    return f"\033[92m{str}\033[00m"
+def red(str):
+    return f"\033[91m{str}\033[00m"
+def yellow(str):
+    return f"\u001b[33m{str}\033[00m"
+
+with open('./2023/Day18/input.ex') as file:
     lines = [line.rstrip() for line in file]
 
+def determinant(p1,p2):
+    #det([a,b;c d])=ad-bc
+    #det([x1 x2;y1 y2])=x1*y1-x2*y2
+    return p1[0]*p1[1]-p2[0]*p2[1]
 # Each hexadecimal code is six hexadecimal digits long. 
 # The first five hexadecimal digits encode the distance 
 # in meters as a five-digit hexadecimal number. The last 
@@ -18,6 +29,9 @@ pos=(0,0)
 SEEN=set()
 SEEN.add(pos)
 
+CORNERS=[pos]
+STEPS=0
+
 for inst in I:
     for _ in range(inst[1]):
         if inst[0]=='U':
@@ -31,12 +45,13 @@ for inst in I:
         else:
             assert False
         SEEN.add(pos)
-
+    CORNERS.append(pos)
+    STEPS+=inst[1]*{'D':1, 'U':-1, 'R':1,'L':-1}[inst[0]]
 rs = [p[0] for p in SEEN]
 cs = [p[1] for p in SEEN]
 
 Q=[]
-Q.append((55,16))
+Q.append((1,1)) #(55,16))
 FILLED=set()
 while Q:
     (r,c) = Q.pop(0)
@@ -53,12 +68,31 @@ def printmap():
             if (r,c)==(315,14):
                 pass
             if (r,c) in SEEN:
-                g+='#'
+                if (r,c) in CORNERS:
+                    g+=green('#')
+                else:
+                    g+=red('#')
+
             elif (r,c) in FILLED:
-                g+='O'
+                g+=yellow('O')
             else:
                 g+='.'
         print(g)
+
+ans=0
+for i,p2 in enumerate(CORNERS):
+    p1=CORNERS[i-1]
+    ans+=(p2[0]-p1[0]+(0 if p2[0]!=p1[0] else 0))*(p1[1]+p2[1])//2
+    # ans+=determinant(p,CORNERS[i-1])
+    print(ans,p1,p2,p2[0]-p1[0],(p1[1]+p2[1])//2)
+
+print(ans)
+print(len(FILLED))
+
+printmap()
+
+print((2-0)*2)
+print(STEPS)
 
 print('------------------------')
 print('Part 1:',len(FILLED)+len(SEEN))

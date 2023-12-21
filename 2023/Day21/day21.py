@@ -1,6 +1,6 @@
 print('2023 - Day 21')
 
-with open('./2023/Day21/input.txt') as file:
+with open('./2023/Day21/input.ex') as file:
     lines = [line.rstrip() for line in file]
 
 M=[]
@@ -21,27 +21,24 @@ def wrap(r,c):
         c=c%C
     return r,c
 
-
-
-for _ in range(64):
+for _ in range(50):
     NEW=set()
     for r,c in NEXT:
         for dr,dc in [(1,0),(-1,0),(0,1),(0,-1)]:
             rr,cc = r+dr,c+dc
-            rrw,ccw=wrap(rr,cc)
-            if M[rrw][ccw]!='#':
+            if M[r%R][c%C]!='#':
                 NEW.add((rr,cc))
 
     NEXT=NEW
 
-# for r in range(R):
-#     g=''
-#     for c in range(C):
-#         if (r,c) in NEXT:
-#             g+='O'
-#         else:
-#             g+=M[r][c]
-#     print(g)
+for r in range(-3*R,1*R):
+    g=''
+    for c in range(-1*C,2*C):
+        if (r,c) in NEXT:
+            g+='O'
+        else:
+            g+=M[r%R][c%C]
+    print(g)
 
 print('------------------------')
 print('Part 1:',print(len(NEXT)))

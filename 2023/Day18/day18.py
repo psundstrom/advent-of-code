@@ -12,8 +12,26 @@ with open('./2023/Day18/input.ex') as file:
 
 def determinant(p1,p2):
     #det([a,b;c d])=ad-bc
-    #det([x1 x2;y1 y2])=x1*y1-x2*y2
-    return p1[0]*p1[1]-p2[0]*p2[1]
+    #det([x1 x2;y1 y2])=x1*y2-x2*y1
+    print(f'{p1[0]}*{p2[1]}-{p1[1]}*{p2[0]}=',p1[0]*p2[1]-p1[1]*p2[0])
+    return p1[0]*(p2[1])-(p1[1])*(p2[0])
+
+def shoelace(points):
+    ans=0
+    ans2=0
+    ans3=0
+    for i,p2 in enumerate(points):
+        p1=points[i-1]
+        p3=points[(i+1)%len(points)]
+        # ans+=(p2[0]-p1[0]+(0 if p2[0]!=p1[0] else 0))*(p1[1]+p2[1])//2
+        ans+=determinant(p2,p1)
+        # print(ans,p1,p2,p2[0]-p1[0],(p1[1]+p2[1])//2)
+        ans2+=(p2[1]-1)*(p1[0]-p3[0])
+        ans3+=(p2[0]-1)*(p3[1]-p1[1])
+        print(ans//2,ans2//2,ans3//2)
+
+    return ans//2,ans2//2,ans3//2
+
 # Each hexadecimal code is six hexadecimal digits long. 
 # The first five hexadecimal digits encode the distance 
 # in meters as a five-digit hexadecimal number. The last 
@@ -28,6 +46,8 @@ for line in lines:
 pos=(0,0)
 SEEN=set()
 SEEN.add(pos)
+
+PATH=[pos]
 
 CORNERS=[pos]
 STEPS=0
@@ -45,6 +65,7 @@ for inst in I:
         else:
             assert False
         SEEN.add(pos)
+        PATH.append(pos)
     CORNERS.append(pos)
     STEPS+=inst[1]*{'D':1, 'U':-1, 'R':1,'L':-1}[inst[0]]
 rs = [p[0] for p in SEEN]
@@ -79,20 +100,25 @@ def printmap():
                 g+='.'
         print(g)
 
-ans=0
-for i,p2 in enumerate(CORNERS):
-    p1=CORNERS[i-1]
-    ans+=(p2[0]-p1[0]+(0 if p2[0]!=p1[0] else 0))*(p1[1]+p2[1])//2
-    # ans+=determinant(p,CORNERS[i-1])
-    print(ans,p1,p2,p2[0]-p1[0],(p1[1]+p2[1])//2)
+# ans=0
+# for i,p2 in enumerate(CORNERS):
+#     p1=CORNERS[i-1]
+#     # ans+=(p2[0]-p1[0]+(0 if p2[0]!=p1[0] else 0))*(p1[1]+p2[1])//2
+#     ans+=determinant(p2,p1)
+#     # print(ans,p1,p2,p2[0]-p1[0],(p1[1]+p2[1])//2)
+# print(ans//2)
 
-print(ans)
+
+
+print(shoelace(CORNERS))
 print(len(FILLED))
+print(len(SEEN))
+
+print(shoelace([(0,0),(0,2),(2,2),(2,0)]))
 
 printmap()
 
-print((2-0)*2)
-print(STEPS)
+print(CORNERS)
 
 print('------------------------')
 print('Part 1:',len(FILLED)+len(SEEN))

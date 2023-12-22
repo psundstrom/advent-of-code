@@ -16,31 +16,37 @@ R=[]
 F=[]
 S=defaultdict(list)
 for i,line in enumerate(lines):
-    brick=[[int(p) for p in a.split(',')] for a in line.split('~')]
+    start,end=[tuple([int(p) for p in a.split(',')]) for a in line.split('~')]
+    lenx=end[0]-start[0]
+    leny=end[1]-start[1]
+    lenz=end[2]-start[2]
+    # print(start,end,lenx,leny,lenz)
+    points=[]
+    points.append(start)
+    if lenx>0:
+        for n in range(lenx):
+            points.append((points[n][0]+1,points[n][1],points[n][2]))
+    elif leny>0:
+        for n in range(leny):
+            points.append((points[n][0],points[n][1]+1,points[n][2]))
+    elif lenz>0:
+        for n in range(lenz):
+            points.append((points[n][0],points[n][1],points[n][2]+1))
+    # print(points)
     name=keywords[i]
-    B[name]=brick
-    if brick[0][2]==1 or brick[1][2]==1:
-        R.append(name)
-    else:
-        F.append(name)
+    # print(name,points,lenx,leny,lenz,line)
+    B[name]=points
+    F.append(name)
+
+for i,item in enumerate(B.keys()):
+    print(item,B[item],lines[i])
+
 
 def testcollision(b1,b2):
-    bricks=[b1,b2]
     # Test if two bricks occupy the same space
-    p=[[],[]] # list of points for each brick
-    for j,brick in enumerate(bricks):
-        for i in 0,1,2:
-            if brick[0][i]!=brick[1][i]:
-                for n in range(min(brick[0][i],brick[1][i]),max(brick[0][i],brick[1][i])+1):
-                    point=[0,0,0]
-                    point[i]=n
-                    for ix in [ix for ix in [0,1,2] if ix!=i]:
-                        point[ix]=brick[0][ix]
-                    p[j].append(tuple(point))
-    
     collision=False
-    for point in p[0]:
-        if point in p[1]:
+    for point in b1:
+        if point in b2:
             collision=True
     return collision
 
@@ -48,21 +54,25 @@ def fall(name):
     brick = B[name]
     collision=False
     while not collision:
-        if brick[0][2]==1 or brick[0][2]==1:
+        z = [p[2] for p in brick]
+        if 1 in z:
             break
-        brick_ = deepcopy(brick)
-        brick_[0][2]-=1
-        brick_[1][2]-=1
-
+        # brick_ = deepcopy(brick)
+        for i,p in enumerate(brick):
+            brick[i]=(p[0],p[1],p[2]-1)
+        # brick[0][2]-=1
+        # brick[1][2]-=1
+        # lower one step
         collision=False
         for name2 in [k for k in reversed(R) if k!=name]:
             brick2=B[name2]
-            if testcollision(brick_,brick2):
+            if testcollision(brick,brick2):
                 collision=True
                 break
-        if not collision:
-            brick[0][2]-=1
-            brick[1][2]-=1
+        if collision:
+            # Move back up because collision
+            for i,p in enumerate(brick):
+                brick[i]=(p[0],p[1],p[2]+1)
 
 def check(brick,testbricks,d=1):
     brick_ = deepcopy(brick)
@@ -75,10 +85,9 @@ def check(brick,testbricks,d=1):
                 ncollision+=1
     return ncollision
 
-F.sort(key=lambda x:min(B[x][0][2],B[x][1][2]))
+F.sort(key=lambda x:min([p[2] for p in B[x]]))
 
 for i,name in enumerate(F):
-    print(i,name)
     fall(name)
     R.append(name)
 
@@ -86,13 +95,20 @@ print('fallen')
 
 fig = go.Figure()
 
+print(R)
 for name in R:
-    x=[B[name][0][0],B[name][1][0]]
-    y=[B[name][0][1],B[name][1][1]]
-    z=[B[name][0][2],B[name][1][2]]
+    x=[p[0] for p in B[name]]
+    y=[p[1] for p in B[name]]
+    z=[p[2] for p in B[name]]
+    print(x)
+    print(y)
+    print(z)    
     fig.add_trace(go.Scatter3d(x=x,y=y,z=z,name=name))
 
 fig.show()
+
+# for key in B.keys():
+#     print(key,B[key])
 
 print('------------------------')
 print('Part 1:',0)

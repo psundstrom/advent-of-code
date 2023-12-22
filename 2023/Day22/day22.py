@@ -1,25 +1,31 @@
 from copy import deepcopy
 import plotly.graph_objects as go
+from itertools import product
+from string import ascii_lowercase
+from collections import defaultdict 
+
+keywords = [''.join(i) for i in product(ascii_lowercase, repeat = 3)]
 
 print('2023 - Day 22')
 
-with open('./2023/Day22/input.ex') as file:
+with open('./2023/Day22/input.txt') as file:
     lines = [line.rstrip() for line in file]
 
-B=[]
+B={}
 R=[]
 F=[]
-for line in lines:
+S=defaultdict(list)
+for i,line in enumerate(lines):
     brick=[[int(p) for p in a.split(',')] for a in line.split('~')]
-    print(brick)
+    name=keywords[i]
+    B[name]=brick
     if brick[0][2]==1 or brick[1][2]==1:
-        R.append(brick)
+        R.append(name)
     else:
-        F.append(brick)
-print(F)
-print(B)
+        F.append(name)
 
-def testcollision(bricks):
+def testcollision(b1,b2):
+    bricks=[b1,b2]
     # Test if two bricks occupy the same space
     p=[[],[]] # list of points for each brick
     for j,brick in enumerate(bricks):
@@ -38,49 +44,53 @@ def testcollision(bricks):
             collision=True
     return collision
 
-def fall():
-    F.sort(key=lambda x:min(x[0][2],x[1][2])) # Lowest z coordinate first
-    for bn in range(len(F)):
-        brick = F.pop(0)
+def fall(name):
+    brick = B[name]
+    collision=False
+    while not collision:
+        if brick[0][2]==1 or brick[0][2]==1:
+            break
         brick_ = deepcopy(brick)
         brick_[0][2]-=1
         brick_[1][2]-=1
-        fcollision=False
-        for brick2 in F:
-            if testcollision([brick_,brick2]):
-                fcollision=True
-        rcollision=False
-        for brick2 in R:
-            if brick_[0][2]==0 or brick_[1][2]==0:
-                rcollision=True
+
+        collision=False
+        for name2 in [k for k in reversed(R) if k!=name]:
+            brick2=B[name2]
+            if testcollision(brick_,brick2):
+                collision=True
                 break
+        if not collision:
+            brick[0][2]-=1
+            brick[1][2]-=1
+
+def check(brick,testbricks,d=1):
+    brick_ = deepcopy(brick)
+    brick_[0][2]+=d
+    brick_[1][2]+=d
+    ncollision=0
+    for brick2 in testbricks:
+        if brick2!=brick:
             if testcollision([brick_,brick2]):
-                rcollision=True
-        if rcollision:
-            R.append(brick)
-        elif fcollision:
-            F.append(brick)
-        else:
-            F.append(brick_)
+                ncollision+=1
+    return ncollision
 
-for item in F:
-    print(item)
+F.sort(key=lambda x:min(B[x][0][2],B[x][1][2]))
 
-while len(F)>0:
-    fall()
-    print(F)
-    print(R)
+for i,name in enumerate(F):
+    print(i,name)
+    fall(name)
+    R.append(name)
 
 print('fallen')
 
 fig = go.Figure()
 
-for i,b in enumerate(R):
-    print(b)
-    x=[b[0][0],b[1][0]]
-    y=[b[0][1],b[1][1]]
-    z=[b[0][2],b[1][2]]
-    fig.add_trace(go.Scatter3d(x=x,y=y,z=z,name=i))
+for name in R:
+    x=[B[name][0][0],B[name][1][0]]
+    y=[B[name][0][1],B[name][1][1]]
+    z=[B[name][0][2],B[name][1][2]]
+    fig.add_trace(go.Scatter3d(x=x,y=y,z=z,name=name))
 
 fig.show()
 

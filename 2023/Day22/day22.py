@@ -1,8 +1,7 @@
 from copy import deepcopy
-import plotly.graph_objects as go
 from itertools import product
 from string import ascii_lowercase
-from collections import defaultdict 
+from collections import defaultdict, deque
 
 keywords = [''.join(i) for i in product(ascii_lowercase, repeat = 3)]
 
@@ -14,13 +13,13 @@ with open('./2023/Day22/input.txt') as file:
 B={}
 R=[]
 F=[]
-S=defaultdict(list)
+SUPPORTEDBY=defaultdict(set)
+SUPPORTS=defaultdict(set)
 for i,line in enumerate(lines):
     start,end=[tuple([int(p) for p in a.split(',')]) for a in line.split('~')]
     lenx=end[0]-start[0]
     leny=end[1]-start[1]
     lenz=end[2]-start[2]
-    # print(start,end,lenx,leny,lenz)
     points=[]
     points.append(start)
     if lenx>0:
@@ -32,15 +31,9 @@ for i,line in enumerate(lines):
     elif lenz>0:
         for n in range(lenz):
             points.append((points[n][0],points[n][1],points[n][2]+1))
-    # print(points)
     name=keywords[i]
-    # print(name,points,lenx,leny,lenz,line)
     B[name]=points
     F.append(name)
-
-for i,item in enumerate(B.keys()):
-    print(item,B[item],lines[i])
-
 
 def testcollision(b1,b2):
     # Test if two bricks occupy the same space
@@ -48,6 +41,7 @@ def testcollision(b1,b2):
     for point in b1:
         if point in b2:
             collision=True
+            break
     return collision
 
 def fall(name):
@@ -57,33 +51,20 @@ def fall(name):
         z = [p[2] for p in brick]
         if 1 in z:
             break
-        # brick_ = deepcopy(brick)
         for i,p in enumerate(brick):
             brick[i]=(p[0],p[1],p[2]-1)
-        # brick[0][2]-=1
-        # brick[1][2]-=1
-        # lower one step
         collision=False
         for name2 in [k for k in reversed(R) if k!=name]:
             brick2=B[name2]
             if testcollision(brick,brick2):
                 collision=True
-                break
+                SUPPORTEDBY[name].add(name2)
+                SUPPORTS[name2].add(name)
+                # break
         if collision:
             # Move back up because collision
             for i,p in enumerate(brick):
                 brick[i]=(p[0],p[1],p[2]+1)
-
-def check(brick,testbricks,d=1):
-    brick_ = deepcopy(brick)
-    brick_[0][2]+=d
-    brick_[1][2]+=d
-    ncollision=0
-    for brick2 in testbricks:
-        if brick2!=brick:
-            if testcollision([brick_,brick2]):
-                ncollision+=1
-    return ncollision
 
 F.sort(key=lambda x:min([p[2] for p in B[x]]))
 
@@ -91,27 +72,34 @@ for i,name in enumerate(F):
     fall(name)
     R.append(name)
 
-print('fallen')
+DIS=set()
+for name in B.keys():
+    if len(SUPPORTS[name])==0:
+        DIS.add(name)
+    else:
+        red=True
+        for name2 in SUPPORTS[name]:
+            if len(SUPPORTEDBY[name2])==1:
+                red=False
+        if red:
+            DIS.add(name)
 
-fig = go.Figure()
-
-print(R)
-for name in R:
-    x=[p[0] for p in B[name]]
-    y=[p[1] for p in B[name]]
-    z=[p[2] for p in B[name]]
-    print(x)
-    print(y)
-    print(z)    
-    fig.add_trace(go.Scatter3d(x=x,y=y,z=z,name=name))
-
-fig.show()
-
-# for key in B.keys():
-#     print(key,B[key])
+RES={}
+for name in B.keys():
+    FALLS=set()
+    FALLS.add(name)
+    Q=deque()
+    Q.append(name)
+    while Q:
+        name1=Q.popleft()
+        for name2 in SUPPORTS[name1]:
+            if len(SUPPORTEDBY[name2].intersection(FALLS))==len(SUPPORTEDBY[name2]):
+                FALLS.add(name2)
+                Q.append(name2)
+    RES[name]=len(FALLS)-1
 
 print('------------------------')
-print('Part 1:',0)
+print('Part 1:',len(DIS))
 print('------------------------')
-print('Part 2:',0)
+print('Part 2:',sum(RES.values()))
 print('------------------------')

@@ -10,7 +10,7 @@ def yellow(str):
     return f"\u001b[33m{str}\033[00m"
 
 
-with open('./2023/Day17/input.ex') as file:
+with open('./2023/Day17/input.txt') as file:
     M = [[int(n) for n in line.rstrip()] for line in file]
 
 H={}
@@ -79,34 +79,46 @@ def getcost(path):
     return ans
 
 while Q:
-    Q.sort(key=lambda x:H[x])
-    current = Q.pop(0)
+    # Q.sort(key=lambda x:H[x])
+    hl=[H[x] for x in Q]
+    current = Q.pop(hl.index(min(hl)))
     if current[0]==goal:
         break
     r,c = current[0]
-
     nod=[]
+    currentdir=(0,0)
     if len(current)>1:
+        currentdir = (current[0][0]-current[1][0],current[0][1]-current[1][1])
         nod.append((current[1][0]-current[0][0],current[1][1]-current[0][1]))
-    if len(current)>3:
+    if len(current)>10:
         # Check if all four is on a row or column
-        rh = set([r for r,c in current[:4]])
-        ch = set([c for r,c in current[:4]])
+        rh = set([r for r,c in current[:11]])
+        ch = set([c for r,c in current[:11]])
         if len(rh)==1:
             nod.extend([(0,1),(0,-1)])
         elif len(ch)==1:
             nod.extend([(1,0),(-1,0)])
     for dr,dc in [(dr,dc) for dr,dc in [(1,0),(-1,0),(0,1),(0,-1)] if (dr,dc) not in nod]:
-        rr=r+dr
-        cc=c+dc
-        if 0<=rr<R and 0<=cc<C and ((rr,cc),)+current[:3] not in SEEN: #(rr,cc) not in [c[0] for c in SEEN]:
-            tentative = H[current]+M[rr][cc]
-            if ((rr,cc),)+current[:3] not in H.keys() or tentative<H[((rr,cc),)+current[:3]]:
-                H[((rr,cc),)+current[:3]]=tentative
-                Q.append(((rr,cc),)+current[:3])
-    
+        
+        if (dr,dc)!=currentdir:
+            tc = ((r+4*dr,c+4*dc),(r+3*dr,c+3*dc),(r+2*dr,c+2*dc),(r+1*dr,c+1*dc))
+            rr,cc=tc[0]
+            if 0<=rr<R and 0<=cc<C and tc+current[:7] not in SEEN: #(rr,cc) not in [c[0] for c in SEEN]:
+                tentative = H[current]+sum(M[r_][c_] for (r_,c_) in tc)
+                # tentative = H[current]+M[rr][cc]
+                if tc+current[:7] not in H.keys() or tentative<H[tc+current[:7]]:
+                    H[tc+current[:7]]=tentative
+                    Q.append(tc+current[:7])
+        else:
+            rr,cc=r+dr,c+dc
+            if 0<=rr<R and 0<=cc<C and tc+current[:10] not in SEEN: #(rr,cc) not in [c[0] for c in SEEN]:
+                tentative = H[current]+M[rr][cc]
+                if ((rr,cc),)+current[:10] not in H.keys() or tentative<H[((rr,cc),)+current[:10]]:
+                    H[((rr,cc),)+current[:10]]=tentative
+                    Q.append(((rr,cc),)+current[:10])
+            
     # PATHS.add(current)
-    SEEN.add(current[:4])
+    SEEN.add(current[:11])
 
     if len(Q)==0:
         print('fail')

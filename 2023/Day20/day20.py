@@ -1,6 +1,7 @@
 print('2023 - Day 20')
 
 from collections import deque
+import math
 
 with open('./2023/Day20/input.txt') as file:
     lines = [line.rstrip() for line in file]
@@ -82,16 +83,18 @@ def getstate(m):
     else:
         return m['state']
 
-# Push button, M['broadcaster']
-print(M['broadcaster']['dest'])
-
-# Queue contains (destination,pulse) actions
-
 low=0
 high=0
 ans1=0
-SEEN=set()
+
+cycles = {}
+seen = {}
+presses=0
+found = False
 for i in range(1000000):
+    if found:
+        break
+    presses+=1
     if i==1000:
         ans1=low*high
     low+=1
@@ -101,11 +104,24 @@ for i in range(1000000):
     found=False
 
     nrx=0
-    while Q:   
-
+    while Q:
         dest,pulse,source=Q.popleft()
-        if dest=='zr':
-            nrx+=1
+        if dest=='zr' and pulse==1:
+            if source not in seen:
+                seen[source]=0
+            else:    
+                seen[source]+=1
+            if source not in cycles:
+                cycles[source] = presses
+            else:
+                assert presses == (seen[source]+1) * cycles[source]
+            if all(seen.values()):
+                x=1
+                for cycle in cycles.values():
+                    x = math.lcm(x,cycle)
+                ans2=x
+                found=True
+                break
         if pulse==0:
             low+=1
         if pulse==1:
@@ -119,11 +135,9 @@ for i in range(1000000):
             res = conjunction(dest,pulse,source)
             for t in M[dest]['dest']:
                 Q.append((t,res,dest))
-    if i%1000==0:
-        printstates()   
     
 print('------------------------')
 print('Part 1:',ans1)
 print('------------------------')
-print('Part 2:',0)
+print('Part 2:',ans2)
 print('------------------------')

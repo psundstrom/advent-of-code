@@ -34,34 +34,57 @@ def fill(r,c):
                     Q.append((rr,cc))
     return P
 
-
-def score(P):
+def score(P,part2=False):
     area = len(P)
     perimeter = 0
-    for (r,c) in P:
-        for rr,cc in [(r+dr,c+dc) for dr,dc in [(1,0),(-1,0),(0,1),(0,-1)]]:
-            if (rr,cc) not in P:
-                perimeter+=1
-    return area*perimeter
+    edges={
+        (1,0):[],
+        (-1,0):[],
+        (0,1):[],
+        (0,-1):[],
+    }
 
-# def score2(P):
-#     area = len(P)
-#     perimeter=0
-#     edge=set()
-#     seen=set()
-#     for (r,c) in P:
-#         for dr,dc in [(1,0),(0,1)]:
-#             while (r+dr,c+dc) in P:
-#                 edge.add(r+dr,c+dc)
-#                 seen.add(r+dr,c+dc)
-#                 r=r+dr
-#                 c=c+dr
-        
-#             if (r+dr,c+dc) in P and 
-#         for rr,cc in [(r+dr,c+dc) for dr,dc in [(1,0),(-1,0),(0,1),(0,-1)]]:
-#             if (rr,cc) not in P:
-#                 perimeter+=1
-#     return area*perimeter
+    for (r,c) in P:
+        for dr,dc in [(1,0),(-1,0),(0,1),(0,-1)]:
+            rr,cc = r + dr, c + dc
+            if (rr,cc) not in P:
+                if (rr,cc) in edges[(dr,dc)]:
+                    print('duplicate')
+                edges[(dr,dc)].append((rr,cc))
+                perimeter+=1
+    if not part2:
+        return area*perimeter
+    
+    # consolidate edges
+    nedges=0
+    for d in [(1,0),(-1,0),(0,1),(0,-1)]:
+        rows = set([v[0] for v in edges[d]])
+        columns = set([v[1] for v in edges[d]])
+        if d in [(1,0),(-1,0)]:
+            for row in rows:
+                c = [v[1] for v in edges[d] if v[0]==row]
+                c.sort()
+                pre = -1000
+                for v in c:
+                    if v-pre==1:
+                        pre=v
+                        continue
+                    else:
+                        nedges+=1
+                        pre=v
+        elif d in [(0,1),(0,-1)]:
+            for column in columns:
+                r = [v[0] for v in edges[d] if v[1]==column]
+                r.sort()
+                pre = -1000
+                for v in r:
+                    if v-pre==1:
+                        pre=v
+                        continue
+                    else:
+                        nedges+=1
+                        pre=v
+    return area*nedges
 
 for r in range(R):
     for c in range(C):
@@ -73,5 +96,5 @@ for r in range(R):
 print('------------------------')
 print('Part 1:',sum([score(P) for P in PLOTS]))
 print('------------------------')
-print('Part 2:',0)
+print('Part 2:',sum([score(P,part2=True) for P in PLOTS]))
 print('------------------------')

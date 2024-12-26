@@ -15,11 +15,6 @@ for r,row in enumerate(grid):
 R = len(grid)
 C = len(grid[0])
 
-Q = [(0,0,start)]
-
-
-SEEN = set()
-
 def printmap(seen):
     for r,row in enumerate(grid):
         toprint=''
@@ -54,12 +49,15 @@ DIST=defaultdict(lambda: 1000)
 
 cheats = []
 
+Q = [(0,0,start)]
+SEEN = set()
+
 while Q:
     dist,cheat,pos = heappop(Q)
     r,c = pos
-    if cheat==1 and DIST[(r,c)]<1000 and dist<DIST[(r,c)]:
-        cheats.append(DIST[(r,c)]-dist)
-        continue
+    # if cheat==1 and DIST[(r,c)]<1000 and dist<DIST[(r,c)]:
+    #     cheats.append(DIST[(r,c)]-dist)
+    #     continue
     if pos==end:
         D.append(dist)
         continue
@@ -74,15 +72,45 @@ while Q:
                 if cheat==0:
                     DIST[(nr,nc)]=dist+1
                 heappush(Q,(dist+1,cheat,(nr,nc)))
-        else:
-            if cheat==0:
-                if (dist+1,1,(nr,nc)) not in Q:
-                    heappush(Q,(dist+1,1,(nr,nc)))
+        # else:
+        #     if cheat==0:
+        #         if (dist+1,1,(nr,nc)) not in Q:
+        #             heappush(Q,(dist+1,1,(nr,nc)))
 
-printmap(SEEN)
+# Q = [(0,0,start)]
+
+SEEN = set()
+Q = [(DIST[k],0,k) for k in DIST.keys()]
+while Q:
+    dist,cheat,pos = heappop(Q)
+    r,c = pos
+
+    if pos==end:
+        D.append(dist)
+        continue
+    if pos in DIST.keys() and dist>DIST[pos]:
+        continue
+    # if (pos,cheat) in SEEN:
+    #     continue
+    # SEEN.add((pos,cheat))
+    for nr,nc in [(r+1,c),(r-1,c),(r,c+1),(r,c-1)]:
+        if nr<0 or nr>=R or nc<0 or nc>=C:
+            continue
+        if grid[nr][nc] in ['.']: continue# and COST[nr][nc]>dist+1:
+        if cheat==0:
+            heappush(Q,(dist+1,1,(nr,nc)))
+
+# printmap(SEEN)
 print(D)
 
-print(cheats)
+
+print(Q)
+
+# for k in DIST.keys():
+#     print(k)
+
+
+# print(cheats)
 
 # printcost()
 
